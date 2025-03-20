@@ -1,0 +1,241 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Singly Linked List Visualizer</title>
+    <style>
+      body {
+        font-family: sans-serif;
+        margin: 20px;
+        background: #fafafa;
+      }
+
+      h1 {
+        color: #444;
+      }
+
+      /* Container for controls (start button + speed slider) */
+      #controls {
+        margin-bottom: 15px;
+      }
+
+      /* Container for the node visualization */
+      #visualization {
+        display: flex;
+        align-items: center;
+        margin: 20px 0;
+        min-height: 100px;
+      }
+
+      /* Style each node */
+      .node {
+        background-color: #fffdde;
+        border: 2px solid #f3c13a;
+        border-radius: 6px;
+        padding: 8px 12px;
+        margin: 0 10px;
+        position: relative;
+        text-align: center;
+        transition: transform 0.3s;
+        white-space: pre; /* to allow newlines in textContent */
+        font-family: monospace;
+      }
+
+      /* An arrow between nodes */
+      .arrow {
+        width: 50px;
+        height: 2px;
+        background-color: #333;
+        position: relative;
+        margin-right: 10px;
+      }
+
+      /* Triangle arrowhead */
+      .arrow::after {
+        content: "";
+        position: absolute;
+        right: 0;
+        top: -4px;
+        border: 5px solid transparent;
+        border-left-color: #333;
+      }
+
+      /* Highlight animation effect */
+      .highlight {
+        transform: scale(1.1);
+        border-color: #ff9900;
+      }
+
+      /* Log console styling */
+      #log {
+        border: 1px solid #ccc;
+        background: #eee;
+        padding: 10px;
+        border-radius: 4px;
+        height: 120px;
+        overflow-y: auto;
+        font-family: monospace;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Singly Linked List Visualizer</h1>
+
+    <!-- Controls: Start button + Speed slider -->
+    <div id="controls">
+      <button id="startBtn">Start</button>
+      <label style="margin-left: 20px">
+        Speed:
+        <input type="range" id="speed" min="0.5" max="3" step="0.1" value="1" />
+        <span id="speedValue">1x</span>
+      </label>
+    </div>
+
+    <!-- Visualization area -->
+    <div id="visualization"></div>
+
+    <!-- Log area -->
+    <div id="log"></div>
+
+    <!-- Emscripten-generated JavaScript + WASM -->
+    <script src="adtVisualizer.js"></script>
+
+    <script>
+      // Steps that mimic the creation of two nodes (88 and 44) and linking them.
+      // You can expand or alter these steps for different operations.
+      const steps = [
+        "Allocate new singly-linked list node (node88)",
+        "node88->data = 88",
+        "node88->next = null",
+        "Allocate new singly-linked list node (node44)",
+        "node44->data = 44",
+        "node44->next = null",
+        "node88->next = node44",
+      ];
+
+      let currentStep = 0;
+      let intervalId = null;
+      const logDiv = document.getElementById("log");
+      const visualization = document.getElementById("visualization");
+      const speedSlider = document.getElementById("speed");
+      const speedValue = document.getElementById("speedValue");
+
+      // Update speed label as slider moves
+      speedSlider.addEventListener("input", () => {
+        speedValue.textContent = speedSlider.value + "x";
+        // If we're mid-animation, reset the interval
+        if (intervalId) {
+          clearInterval(intervalId);
+          startAnimation();
+        }
+      });
+
+      // Start button sets up the environment and triggers the step-by-step process
+      document.getElementById("startBtn").addEventListener("click", () => {
+        // Reset the UI
+        currentStep = 0;
+        logDiv.innerHTML = "";
+        visualization.innerHTML = "";
+
+        // Create our WASM module
+        createModule().then((Module) => {
+          // Example usage of the linked list in code:
+          // const list = new Module.SinglyLinkedList();
+          // list.appendNode(88);
+          // list.appendNode(44);
+          // (We won't do it yet, just demonstrating. We'll simulate it visually with steps.)
+
+          // Now begin the animation steps
+          startAnimation();
+        });
+      });
+
+      function startAnimation() {
+        // Clear any previous interval
+        if (intervalId) clearInterval(intervalId);
+
+        // Step every (1000 / speedSlider.value) ms
+        intervalId = setInterval(() => {
+          if (currentStep >= steps.length) {
+            clearInterval(intervalId);
+            return;
+          }
+          const stepText = steps[currentStep];
+          logDiv.innerHTML += stepText + "\n";
+          logDiv.scrollTop = logDiv.scrollHeight; // auto-scroll to bottom
+
+          applyStep(stepText);
+          currentStep++;
+        }, 1000 / speedSlider.value);
+      }
+
+      // A simple function to transform each step into a visual update
+      function applyStep(step) {
+        if (step.includes("Allocate new singly-linked list node (node88)")) {
+          // Create a node element for node88
+          const node = document.createElement("div");
+          node.className = "node highlight";
+          node.id = "node88";
+          node.textContent = "data: ??\nnext: ??";
+          visualization.appendChild(node);
+
+          // Remove highlight after a short delay
+          setTimeout(() => node.classList.remove("highlight"), 500);
+        } else if (step.includes("node88->data = 88")) {
+          const node88 = document.getElementById("node88");
+          if (node88) {
+            node88.classList.add("highlight");
+            node88.textContent = "data: 88\nnext: ??";
+            setTimeout(() => node88.classList.remove("highlight"), 500);
+          }
+        } else if (step.includes("node88->next = null")) {
+          const node88 = document.getElementById("node88");
+          if (node88) {
+            node88.classList.add("highlight");
+            node88.textContent = "data: 88\nnext: null";
+            setTimeout(() => node88.classList.remove("highlight"), 500);
+          }
+        } else if (
+          step.includes("Allocate new singly-linked list node (node44)")
+        ) {
+          // Create a node element for node44
+          const node = document.createElement("div");
+          node.className = "node highlight";
+          node.id = "node44";
+          node.textContent = "data: ??\nnext: ??";
+          visualization.appendChild(node);
+
+          setTimeout(() => node.classList.remove("highlight"), 500);
+        } else if (step.includes("node44->data = 44")) {
+          const node44 = document.getElementById("node44");
+          if (node44) {
+            node44.classList.add("highlight");
+            node44.textContent = "data: 44\nnext: ??";
+            setTimeout(() => node44.classList.remove("highlight"), 500);
+          }
+        } else if (step.includes("node44->next = null")) {
+          const node44 = document.getElementById("node44");
+          if (node44) {
+            node44.classList.add("highlight");
+            node44.textContent = "data: 44\nnext: null";
+            setTimeout(() => node44.classList.remove("highlight"), 500);
+          }
+        } else if (step.includes("node88->next = node44")) {
+          // Update node88 text
+          const node88 = document.getElementById("node88");
+          const node44 = document.getElementById("node44");
+          if (node88 && node44) {
+            node88.classList.add("highlight");
+            // Insert an arrow element before node44
+            const arrow = document.createElement("div");
+            arrow.className = "arrow";
+            visualization.insertBefore(arrow, node44);
+            node88.textContent = "data: 88\nnext: node44";
+
+            setTimeout(() => node88.classList.remove("highlight"), 500);
+          }
+        }
+      }
+    </script>
+  </body>
+</html>
